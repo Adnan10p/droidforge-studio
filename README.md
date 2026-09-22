@@ -1,7 +1,7 @@
 # 🛠️ DroidForge Studio - Visual Android App Builder
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Adnan10p%2Fdroidforge--studio-blue?style=for-the-badge&logo=github)](https://github.com/Adnan10p/droidforge-studio)
-[![Copyright](https://img.shields.io/badge/Copyright-%C2%A9%202026%20Adnan-red?style=for-the-badge)]()
+[![Copyright](https://img.shields.io/badge/Copyright-%C2%A9%202026%20Adnan-red?style=for-the-badge)](https://github.com/Adnan10p)
 [![License](https://img.shields.io/badge/License-Open--Contribution%20%2F%20Custom-orange?style=for-the-badge)](LICENSE)
 [![Node Version](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=for-the-badge&logo=node.js)]()
 
