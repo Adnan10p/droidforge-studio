@@ -1,10 +1,11 @@
 # 🛠️ DroidForge Studio - Visual Android App Builder
 
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Adnan10p%2Fdroidforge--studio-blue?style=for-the-badge&logo=github)](https://github.com/Adnan10p/droidforge-studio)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)]()
+[![Copyright](https://img.shields.io/badge/Copyright-%C2%A9%202026%20Adnan-red?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-Open--Contribution%20%2F%20Custom-orange?style=for-the-badge)](LICENSE)
 [![Node Version](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=for-the-badge&logo=node.js)]()
 
-**DroidForge Studio** is a modern visual drag-and-drop IDE, low-code platform, and native APK builder for Android application development created by **[@Adnan10p](https://github.com/Adnan10p)**. It allows developers, designers, and non-coders to visually design Android interfaces, attach visual block logic, preview in real-time, generate full UI screens using AI, inspect Kotlin Jetpack Compose code, and compile native Android APK binaries directly for mobile devices.
+**DroidForge Studio** is a modern visual drag-and-drop IDE, low-code platform, and native APK builder for Android application development created and owned exclusively by **[@Adnan10p](https://github.com/Adnan10p)**. It allows developers, designers, and non-coders to visually design Android interfaces, attach visual block logic, preview in real-time, generate full UI screens using AI, inspect Kotlin Jetpack Compose code, and compile native Android APK binaries directly for mobile devices.
 
 ---
 
@@ -118,6 +119,26 @@ For step-by-step details in Roman Urdu & English, read [FRIEND_TESTING_GUIDE.md]
 
 ---
 
-## 👤 Author & Support
-Created by **Adnan** ([@Adnan10p](https://github.com/Adnan10p)).
-Feel free to star ⭐️ the repository and test it out!
+## 🤝 Open Contributions & Pull Requests (PRs)
+
+We welcome developers and team members to help improve DroidForge Studio!
+- Want to report a bug or suggest a feature? Open a [GitHub Issue](https://github.com/Adnan10p/droidforge-studio/issues).
+- Want to submit code fixes or improvements? Follow our [CONTRIBUTING.md](CONTRIBUTING.md) guide and submit a **Pull Request (PR)**.
+- All contributions are merged directly into the main repository at `https://github.com/Adnan10p/droidforge-studio`.
+
+---
+
+## 📜 Copyright & Licensing Terms
+
+**Copyright © 2026 Adnan ([@Adnan10p](https://github.com/Adnan10p)). All Rights Reserved.**
+
+- **Allowed**: Running locally, testing, educational use, and submitting open-source contributions via Pull Requests to this repository.
+- **Strictly Prohibited**: Re-branding, re-naming, modifying for commercial re-distribution, selling, or re-uploading this builder as a separate standalone product without explicit prior written authorization from Adnan (@Adnan10p).
+
+See full terms in the [LICENSE](LICENSE) file.
+
+---
+
+## 👤 Author & Owner
+Created and maintained by **Adnan** ([@Adnan10p](https://github.com/Adnan10p)).
+Feel free to star ⭐️ the repository and contribute!
