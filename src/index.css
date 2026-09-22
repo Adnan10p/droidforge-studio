@@ -1,0 +1,221 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+:root {
+  --ide-shell-bg: #0F172A;
+  --ide-card-bg: #1E293B;
+  --ide-card-inner-bg: #0F172A;
+  --ide-text: #F8FAFC;
+  --ide-text-muted: #94A3B8;
+  --ide-border: #334155;
+  --ide-accent: #6366F1;
+  --ide-accent-text: #FFFFFF;
+  --ide-tab-bar-bg: #0B1120;
+  --ide-tab-active-bg: #6366F1;
+  --ide-tab-active-text: #FFFFFF;
+  --ide-tab-inactive-text: #94A3B8;
+  --ide-tab-indicator: #818CF8;
+  --ide-font-family: inherit;
+}
+
+/* IDE Theme Utility Classes */
+.ide-shell {
+  background-color: var(--ide-shell-bg) !important;
+  color: var(--ide-text) !important;
+}
+
+.ide-card {
+  background-color: var(--ide-card-bg) !important;
+  color: var(--ide-text) !important;
+  border-color: var(--ide-border) !important;
+}
+
+.ide-card-inner {
+  background-color: var(--ide-card-inner-bg) !important;
+  color: var(--ide-text) !important;
+  border-color: var(--ide-border) !important;
+}
+
+.ide-text {
+  color: var(--ide-text) !important;
+}
+
+.ide-text-muted {
+  color: var(--ide-text-muted) !important;
+}
+
+.ide-border {
+  border-color: var(--ide-border) !important;
+}
+
+.ide-tab-bar {
+  background-color: var(--ide-tab-bar-bg) !important;
+  border-color: var(--ide-border) !important;
+}
+
+.ide-tab-active {
+  background-color: var(--ide-tab-active-bg) !important;
+  color: var(--ide-tab-active-text) !important;
+  border-color: var(--ide-tab-indicator) !important;
+}
+
+.ide-tab-inactive {
+  color: var(--ide-tab-inactive-text) !important;
+}
+
+/* Container-level theme synchronization for all IDE tabs */
+.ide-theme-container {
+  background-color: var(--ide-shell-bg) !important;
+  color: var(--ide-text) !important;
+  font-family: var(--ide-font-family) !important;
+}
+
+/* Apply card backgrounds and borders dynamically */
+.ide-theme-container .bg-slate-900,
+.ide-theme-container .bg-slate-900\/95,
+.ide-theme-container .bg-slate-900\/90,
+.ide-theme-container .bg-slate-900\/80,
+.ide-theme-container .bg-slate-900\/70,
+.ide-theme-container .bg-slate-900\/60,
+.ide-theme-container .bg-slate-900\/50,
+.ide-theme-container .bg-slate-900\/40,
+.ide-theme-container .bg-white,
+.ide-theme-container .bg-white\/95 {
+  background-color: var(--ide-card-bg) !important;
+  border-color: var(--ide-border);
+}
+
+/* Apply inner card backgrounds dynamically */
+.ide-theme-container .bg-slate-950,
+.ide-theme-container .bg-slate-950\/90,
+.ide-theme-container .bg-slate-950\/80,
+.ide-theme-container .bg-slate-950\/70,
+.ide-theme-container .bg-slate-950\/60,
+.ide-theme-container .bg-slate-950\/50,
+.ide-theme-container .bg-slate-950\/40,
+.ide-theme-container .bg-slate-800\/40,
+.ide-theme-container .bg-slate-800\/50,
+.ide-theme-container .bg-slate-800\/60,
+.ide-theme-container .bg-slate-800\/80,
+.ide-theme-container .bg-slate-50,
+.ide-theme-container .bg-slate-100 {
+  background-color: var(--ide-card-inner-bg) !important;
+  border-color: var(--ide-border);
+}
+
+/* Apply borders dynamically */
+.ide-theme-container .border-slate-800,
+.ide-theme-container .border-slate-800\/90,
+.ide-theme-container .border-slate-800\/80,
+.ide-theme-container .border-slate-800\/60,
+.ide-theme-container .border-slate-700,
+.ide-theme-container .border-slate-700\/80,
+.ide-theme-container .border-slate-700\/60,
+.ide-theme-container .border-slate-700\/50,
+.ide-theme-container .border-slate-200,
+.ide-theme-container .border-slate-200\/90,
+.ide-theme-container .border-slate-300,
+.ide-theme-container .border-slate-100 {
+  border-color: var(--ide-border) !important;
+}
+
+/* Text and text-muted propagation */
+.ide-theme-container .text-white,
+.ide-theme-container .text-slate-100,
+.ide-theme-container .text-slate-900,
+.ide-theme-container .text-slate-800,
+.ide-theme-container .text-slate-700 {
+  color: var(--ide-text) !important;
+}
+
+.ide-theme-container .text-slate-300,
+.ide-theme-container .text-slate-400,
+.ide-theme-container .text-slate-500,
+.ide-theme-container .text-slate-600 {
+  color: var(--ide-text-muted) !important;
+}
+
+/* Input, select, and textarea dynamic styling within IDE theme container */
+.ide-theme-container input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.ide-theme-container select,
+.ide-theme-container textarea {
+  background-color: var(--ide-card-inner-bg) !important;
+  color: var(--ide-text) !important;
+  border-color: var(--ide-border) !important;
+}
+
+/* Simulation Execution Animated Glow and Pulsing Transitions */
+@keyframes flow-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px 3px rgba(99, 102, 241, 0.6), 0 0 30px 6px rgba(16, 185, 129, 0.4);
+    transform: scale(1.04);
+  }
+  50% {
+    box-shadow: 0 0 28px 7px rgba(99, 102, 241, 0.9), 0 0 50px 14px rgba(56, 189, 248, 0.7);
+    transform: scale(1.06);
+  }
+}
+
+.flow-node-active-sim {
+  animation: flow-glow-pulse 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate !important;
+  z-index: 50 !important;
+  outline: 2px solid #38bdf8 !important;
+}
+
+@keyframes edge-pulse-flow {
+  0% {
+    stroke-dashoffset: 40;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.react-flow__edge.animating-sim path {
+  stroke-dasharray: 8, 4;
+  animation: edge-pulse-flow 0.6s linear infinite !important;
+  filter: drop-shadow(0 0 6px #38bdf8);
+}
+
+@keyframes broken-dash-flow {
+  0% {
+    stroke-dashoffset: 30;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.broken-flow-edge path,
+.react-flow__edge.broken-flow path {
+  stroke: #F43F5E !important;
+  stroke-dasharray: 6, 6 !important;
+  animation: broken-dash-flow 0.7s linear infinite !important;
+  filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.7));
+}
+
+@keyframes node-error-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px 3px rgba(244, 63, 94, 0.5), 0 0 30px 6px rgba(225, 29, 72, 0.3);
+    border-color: rgba(244, 63, 94, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 28px 7px rgba(244, 63, 94, 0.8), 0 0 45px 12px rgba(225, 29, 72, 0.6);
+    border-color: rgba(251, 113, 133, 1);
+  }
+}
+
+.node-error-ring {
+  animation: node-error-glow 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate !important;
+  z-index: 45 !important;
+}
+
+@keyframes flowDash {
+  to {
+    stroke-dashoffset: -24px;
+  }
+}
+
+.animate-flow-dash {
+  animation: flowDash 0.9s linear infinite;
+}

@@ -1,0 +1,14 @@
+node_modules/
+build/
+dist/
+dist-electron/
+scratch/builds/
+coverage/
+.DS_Store
+*.log
+.env
+.env.local
+.env.production
+!.env.example
+.idea/
+.vscode/
