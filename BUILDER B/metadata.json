@@ -1,6 +1,0 @@
-{
-  "name": "DroidForge Studio - Visual Android App Builder",
-  "description": "Professional visual drag-and-drop Android app builder with logic blocks, Jetpack Compose code generation, native SDK & NDK support, AI generator, and Android Studio project export.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
