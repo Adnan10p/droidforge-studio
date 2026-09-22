@@ -4,7 +4,44 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)]()
 [![Node Version](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=for-the-badge&logo=node.js)]()
 
-**DroidForge Studio** is a full-featured visual drag-and-drop IDE, low-code platform, and APK builder for Android application development created by **[@Adnan10p](https://github.com/Adnan10p)**. It allows developers and non-coders to visually design Android interfaces, attach visual block logic, preview in real-time, generate full UI screens using AI, and compile native Android APK binaries directly for mobile devices.
+**DroidForge Studio** is a modern visual drag-and-drop IDE, low-code platform, and native APK builder for Android application development created by **[@Adnan10p](https://github.com/Adnan10p)**. It allows developers, designers, and non-coders to visually design Android interfaces, attach visual block logic, preview in real-time, generate full UI screens using AI, and compile native Android APK binaries directly for mobile devices.
+
+---
+
+## 📸 Visual Showcase & Interface Tour
+
+### 1. 🚀 App Creation & Template Dashboard
+Easily configure your new Android application project, set unique package identifiers (`com.droidforge.app`), select industry starter templates (E-Commerce, Productivity, Fintech, Fitness), and choose custom dashboard theme colors.
+
+![01 Create App Modal](public/screenshots/01_create_app_modal.png)
+
+---
+
+### 2. 🎨 Main Visual Builder Canvas & Component Palette
+Drag-and-drop from over 170+ Material 3 Android components (Buttons, Inputs, Sliders, Cards, YouTube Player, Maps, Camera). Inspect and fine-tune layout dimensions, padding, margins, visibility modes, and alignment on the real-time phone preview.
+
+![02 Visual Builder Canvas](public/screenshots/02_visual_builder_canvas.png)
+
+---
+
+### 3. 🌲 Component Layout Hierarchy Tree
+Inspect the complete screen node tree in real-time. Expand, collapse, re-order, and manage visible/non-visible background components (Sensors, Audio Player, Storage, APIs) with instant canvas highlighting.
+
+![03 Component Hierarchy](public/screenshots/03_component_hierarchy.png)
+
+---
+
+### 4. 🧩 Custom Component Studio & Jetpack Compose Maker
+Write custom Jetpack Compose Kotlin code directly inside Studio or let the AI extract dynamic component properties. Includes live live-property testing and dynamic canvas component registration.
+
+![04 Custom Component Maker](public/screenshots/04_custom_component_maker.png)
+
+---
+
+### 5. 🤖 Gemini AI Android Studio Architect
+Describe any Android application idea in plain English (e.g., *"Build a Smart Home controller with lighting switches and camera feed"*), or choose preset templates. The AI automatically generates full Jetpack Compose screens, ViewModels, and visual block logic!
+
+![05 Gemini AI Architect](public/screenshots/05_gemini_ai_architect.png)
 
 ---
 
@@ -50,16 +87,6 @@ For step-by-step details in Roman Urdu & English, read [FRIEND_TESTING_GUIDE.md]
    - Download and install `.apk` on any Android smartphone.
 3. **🌐 Mobile Browser Live Receiver**:
    - Connect phone & PC to same Wi-Fi network and open `http://<YOUR_PC_IP>:3000` in your phone browser.
-
----
-
-## 🧰 Key Features & Capabilities
-
-- 🎨 **Visual Canvas**: Drag & drop UI elements (Cards, Buttons, Inputs, Maps, Camera, Media, Sliders, Switches, ListViews).
-- 🧩 **Visual Logic Block Editor**: Event-driven logic (`OnClick`, `OnCreate`), Toast notifications, Navigation, Firebase, API calls.
-- ⚙️ **Native Android Compiler**: Compiles Kotlin/Java code into Android DEX & APK packages.
-- 🤖 **AI Screen Generator & Assistant**: Built-in Gemini model integration for prompt-driven layout generation.
-- 📤 **Code Export**: Export ready-to-use Jetpack Compose Kotlin code or full Android Studio project ZIPs.
 
 ---
 

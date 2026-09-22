@@ -1,7 +1,36 @@
-# 🚀 DroidForge Studio - Friend Testing & Setup Guide
+# 🚀 DroidForge Studio - Visual Android App Builder Testing & Feature Guide
 *(Guide in Roman Urdu & English)*
 
-Aap ka friend DroidForge Studio ko kitni aasani se apne PC par setup karke test kar sakta hai, niche diye gaye steps ko follow karein:
+Aap ka friend ya koi bhi user DroidForge Studio ko kitni aasani se apne PC par setup karke test kar sakta hai, niche diye gaye steps ko follow karein:
+
+---
+
+## 📸 Builder Features & UI Screenshots
+
+### 1. 🚀 App Creation & Dashboard
+Pehla step app create karne ka setup modal:
+
+![Create App Modal](public/screenshots/01_create_app_modal.png)
+
+### 2. 🎨 Main Visual Builder Canvas
+Component palette se components drag-and-drop karein aur properties custom change karein:
+
+![Visual Builder Canvas](public/screenshots/02_visual_builder_canvas.png)
+
+### 3. 🌲 Component Layout Hierarchy
+Apne screen ke tamaam components node hierarchy tree mein dekhein:
+
+![Component Hierarchy](public/screenshots/03_component_hierarchy.png)
+
+### 4. 🧩 Custom Component Studio & Jetpack Compose
+Custom Kotlin Compose components create aur live preview karein:
+
+![Custom Component Maker](public/screenshots/04_custom_component_maker.png)
+
+### 5. 🤖 Gemini AI Android Studio Architect
+AI se kisi bhi kisam ki Android screen prompt likh kar automatic generate karwayein:
+
+![Gemini AI Architect](public/screenshots/05_gemini_ai_architect.png)
 
 ---
 
@@ -48,30 +77,10 @@ DroidForge Studio mein aap 3 simple tarikon se app ko phone par test kar sakte h
 2. Studio backend project ko compile karke real **`.apk`** build karega.
 3. Build complete hone par **"Download APK"** button aayega ya QR Code scan karke APK phone par download karke install kar lein!
 
-*(Note: Agar PC par Android SDK / Java JDK installed ho to local native compilation hoti hai, warna studio universal standalone binary package generate karta hai).*
-
 ### 🌐 Method 3: Mobile Browser Live Preview
 1. PC aur Phone ko **SAME Wi-Fi** se connect karein.
 2. PC par Command Prompt khol kar `ipconfig` likhein aur apna local IP address dekhein (e.g., `192.168.1.10`).
 3. Phone browser par open karein: **`http://192.168.1.10:3000`**
-
----
-
-## 🎨 Step 3: Visual App Creation Features
-
-Friend in features ko test kar sakta hai:
-- **Drag & Drop UI Components**: Buttons, Cards, Lists, Input fields, Images, Videos, Maps, Camera, Switch, Sliders, etc.
-- **Visual Logic Block Editor**: Event blocks (`OnClick`, `OnCreate`), Actions (`Show Toast`, `Navigate Screen`, `API Call`, `Firebase Write`).
-- **Multi-Screen Support**: Multiple screens create karein aur screen navigation setup karein.
-- **AI App Generator**: Prompt likhein (e.g. *"Create a modern E-commerce screen with products and buy button"*) aur AI automatic poora screen UI create kar dega.
-- **Export Options**: Kotlin / Jetpack Compose code export, Android Studio Zip export, aur compiled APK export.
-
----
-
-## 🔧 Troubleshooting & Tips
-
-- **Port 3000 busy error**: Agar port 3000 already in use ho, to `server.ts` mein `PORT = 3000` ko `PORT = 3001` change kar sakte hain.
-- **Gemini AI Key (Optional)**: AI features test karne ke liye Settings -> Secrets mein `GEMINI_API_KEY` set kar sakte hain (Offline fallback templates key ke bina bhi kaam karte hain!).
 
 ---
 
