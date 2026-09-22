@@ -1,11 +1,11 @@
 # 🚀 DroidForge Studio - Visual Android App Builder Testing & Feature Guide
 *(Guide in Roman Urdu & English)*
 
-Aap ka friend ya koi bhi user DroidForge Studio ko kitni aasani se apne PC par setup karke test kar sakta hai, niche diye gaye steps ko follow karein:
+Aap ka friend ya koi bhi user DroidForge Studio ko kitni aasani se apne PC par setup karke test kar sakta hai, niche diye gaye steps aur UI screens ko follow karein:
 
 ---
 
-## 📸 Builder Features & UI Screenshots
+## 📸 Builder Features & UI Screenshots Tour (9 Key Features)
 
 ### 1. 🚀 App Creation & Dashboard
 Pehla step app create karne ka setup modal:
@@ -18,7 +18,7 @@ Component palette se components drag-and-drop karein aur properties custom chang
 ![Visual Builder Canvas](public/screenshots/02_visual_builder_canvas.png)
 
 ### 3. 🌲 Component Layout Hierarchy
-Apne screen ke tamaam components node hierarchy tree mein dekhein:
+Apne screen ke tamaam components node hierarchy tree mein dekhein aur re-order karein:
 
 ![Component Hierarchy](public/screenshots/03_component_hierarchy.png)
 
@@ -31,6 +31,26 @@ Custom Kotlin Compose components create aur live preview karein:
 AI se kisi bhi kisam ki Android screen prompt likh kar automatic generate karwayein:
 
 ![Gemini AI Architect](public/screenshots/05_gemini_ai_architect.png)
+
+### 6. ⚡ Visual Logic Flow Node Editor
+Event triggers (`OnClick`, `OnCreate`) ko Actions (`Method Call`, `Toasts`, `Firebase`) se visual nodes dwara connect karein:
+
+![Visual Logic Flow](public/screenshots/06_logic_blocks.png)
+
+### 7. 💻 Code Studio & Jetpack Compose Live Preview
+Clean Kotlin Jetpack Compose code dekhein aur edit karein side-by-side live phone stage preview ke saath:
+
+![Code Studio Editor](public/screenshots/07_code_studio.png)
+
+### 8. 🏷️ App Identity & Publishing Properties
+App Name, Package Name, Version Code, Launcher Icon, Splash Screen, aur SDK settings configure karein:
+
+![App Properties Publishing](public/screenshots/08_app_properties.png)
+
+### 9. 🎨 Builder IDE Appearance & Themes
+DroidForge Studio ka dark theme and IDE colors customize karein (Midnight Obsidian, High Contrast Pro, Nordic Frost):
+
+![Builder IDE Themes](public/screenshots/09_builder_settings.png)
 
 ---
 
