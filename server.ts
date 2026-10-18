@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import QRCode from "qrcode";
 import { buildApkBinary, ensurePrebuiltCompanionApk } from "./src/server/apkBuilder";
+import { buildIntermediateRepresentation } from "./src/server/intermediateRepresentation";
 
 const app = express();
 const PORT = 3000;
@@ -346,19 +347,57 @@ app.get("/api/companion/live-state", (_req, res) => {
   return res.json(companionLiveState);
 });
 
+// Pre-build Architecture & Safety Diagnostic Endpoint
+app.post("/api/build/validate", (req, res) => {
+  try {
+    const { config, screens } = req.body;
+    if (!config) {
+      return res.status(400).json({ error: "Project configuration is required" });
+    }
+    const validation = buildIntermediateRepresentation(config, screens || []);
+    return res.json(validation);
+  } catch (err: any) {
+    return res.status(500).json({ error: err?.message || "Validation failed" });
+  }
+});
+
 // Binary APK Compilation Endpoint
 app.post("/api/build/apk", async (req, res) => {
   try {
-    const { config, screens } = req.body;
+    const { config, screens, engine, target, mode } = req.body;
     if (!config || !config.appName) {
       return res.status(400).json({ error: "Project configuration is required" });
     }
 
-    const result = await buildApkBinary(config, screens || []);
+    const result = await buildApkBinary(config, screens || [], {
+      engine: engine || "auto",
+      target: target || "apk",
+      mode: mode || "release",
+    });
     return res.json(result);
   } catch (err: any) {
     console.error("APK Build error:", err);
     return res.status(500).json({ error: err?.message || "Failed to compile APK binary" });
+  }
+});
+
+// Google Play Store App Bundle (AAB) Compilation Endpoint
+app.post("/api/build/aab", async (req, res) => {
+  try {
+    const { config, screens, mode } = req.body;
+    if (!config || !config.appName) {
+      return res.status(400).json({ error: "Project configuration is required" });
+    }
+
+    const result = await buildApkBinary(config, screens || [], {
+      engine: "gradle",
+      target: "aab",
+      mode: mode || "release",
+    });
+    return res.json(result);
+  } catch (err: any) {
+    console.error("AAB Build error:", err);
+    return res.status(500).json({ error: err?.message || "Failed to compile AAB bundle" });
   }
 });
 
@@ -395,6 +434,42 @@ app.get("/api/build/download-apk", (req, res) => {
     stream.pipe(res);
   } catch (err: any) {
     return res.status(500).send("Error downloading APK file");
+  }
+});
+
+// Google Play Store App Bundle (.AAB) Download Endpoint by Build ID
+app.get("/api/build/download-aab", (req, res) => {
+  try {
+    const buildId = (req.query.id as string) || "latest";
+    const appName = (req.query.appName as string) || "app";
+    const fileName = `${appName.toLowerCase().replace(/[^a-z0-9]/g, "_")}-release.aab`;
+
+    let aabPath = path.join(process.cwd(), "scratch", "builds", buildId, "app-release.aab");
+
+    // Fallback to latest build directory if specific buildId folder is missing
+    if (!fs.existsSync(aabPath)) {
+      const buildsDir = path.join(process.cwd(), "scratch", "builds");
+      if (fs.existsSync(buildsDir)) {
+        const dirs = fs.readdirSync(buildsDir).sort().reverse();
+        if (dirs.length > 0) {
+          aabPath = path.join(buildsDir, dirs[0], "app-release.aab");
+        }
+      }
+    }
+
+    if (!fs.existsSync(aabPath)) {
+      return res.status(404).send("AAB bundle file not found. Please click 'Compile AAB' first.");
+    }
+
+    const stats = fs.statSync(aabPath);
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Length", stats.size);
+
+    const stream = fs.createReadStream(aabPath);
+    stream.pipe(res);
+  } catch (err: any) {
+    return res.status(500).send("Error downloading AAB file");
   }
 });
 

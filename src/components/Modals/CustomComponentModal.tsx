@@ -148,7 +148,7 @@ export const CustomComponentModal: React.FC<CustomComponentModalProps> = ({
     if (existingComponent) {
       setName(existingComponent.name);
       setTypeId(existingComponent.type);
-      setCategory(existingComponent.category);
+      setCategory(existingComponent.category as ComponentCategory);
       setDescription(existingComponent.description || "");
       setIconName(existingComponent.iconName || "Sparkles");
       setIsContainer(existingComponent.isContainer);

@@ -1756,7 +1756,8 @@ const LogicFlowCanvas: React.FC<LogicFlowEditorProps> = ({
   }, [nodeContextMenu]);
 
   const handleNodeChangeEvent = useCallback(
-    (newEvent: string) => {
+    (_nodeOrEvent: any, maybeEvent?: string) => {
+      const newEvent = maybeEvent || (typeof _nodeOrEvent === 'string' ? _nodeOrEvent : '');
       if (!nodeContextMenu) return;
       const { node } = nodeContextMenu;
       setNodes((nds) => {
@@ -2413,6 +2414,8 @@ const LogicFlowCanvas: React.FC<LogicFlowEditorProps> = ({
               isOpen={true}
               onClose={() => setEdgeInsertPicker(null)}
               onSelectOption={handleInsertOnEdge}
+              x={edgeInsertPicker.screenPos.x}
+              y={edgeInsertPicker.screenPos.y}
               position={edgeInsertPicker.screenPos}
             />
           )}

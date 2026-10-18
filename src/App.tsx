@@ -1444,6 +1444,7 @@ export default function App() {
         isOpen={isBuildModalOpen}
         onClose={() => setIsBuildModalOpen(false)}
         config={config}
+        screens={screens}
         onExportZip={handleExportZip}
       />
 

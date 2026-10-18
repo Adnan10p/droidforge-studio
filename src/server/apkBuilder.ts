@@ -3,6 +3,15 @@ import path from "path";
 import { spawnSync } from "child_process";
 import JSZip from "jszip";
 import { ProjectConfig, AndroidScreen, AndroidComponent } from "../types";
+import { compileNativeMainActivityJava, HardwareCompiler, GradleBuilder } from "./native-compiler";
+import { buildIntermediateRepresentation, PreBuildValidationResult, PreBuildDiagnostic } from "./intermediateRepresentation";
+import { buildProductionGradleArtifact, findGradleExecutable } from "./productionGradleEngine";
+
+export interface BuildOptions {
+  engine?: "auto" | "fast_java" | "gradle";
+  target?: "apk" | "aab";
+  mode?: "debug" | "release";
+}
 
 export interface ApkBuildResult {
   success: boolean;
@@ -12,6 +21,7 @@ export interface ApkBuildResult {
   downloadUrl?: string;
   logs: string[];
   error?: string;
+  diagnostics?: PreBuildDiagnostic[];
 }
 
 // Locate Android SDK & Java JDK dynamically on host machine
@@ -27,7 +37,7 @@ function getSdkTools() {
     } else if (fs.existsSync("C:\\Android\\Sdk")) {
       androidSdk = "C:\\Android\\Sdk";
     } else {
-      androidSdk = "C:\\Users\\SAAB PC\\AppData\\Local\\Android\\Sdk";
+      androidSdk = process.env.USERPROFILE ? path.join(process.env.USERPROFILE, "AppData", "Local", "Android", "Sdk") : "C:\\Android\\Sdk";
     }
   }
 
@@ -151,518 +161,95 @@ function getAllClassFiles(dirPath: string): string[] {
   return results;
 }
 
-// Generate Native Java Activity code from Visual Screens & Components
-function generateJavaMainActivity(config: ProjectConfig, screens: AndroidScreen[]): string {
-  const fallbackScreen: AndroidScreen = {
-    id: "screen_main",
-    name: "MainScreen",
-    title: config.appName,
-    rootComponent: { id: "root", type: "ScrollView", category: "Layouts", name: "MainScroll", props: {}, children: [] },
-    logicBlocks: [],
-    properties: { backgroundColor: "#FFFFFF", titleVisible: true },
-  };
-  const initialScreen: AndroidScreen = screens.find((s) => s.isInitial) || screens[0] || fallbackScreen;
-
-  const packageName = config.packageName || "com.droidforge.quickapp";
-  const appTitle = config.appName || "DroidForge App";
-  const screenProperties = initialScreen.properties || {};
-
-  const isTitleVisible = screenProperties.titleVisible !== false;
-  const displayScreenTitle = screenProperties.title || initialScreen.title || appTitle;
-  const screenBgColor = screenProperties.backgroundColor || "#FFFFFF";
-  const primaryThemeColor = screenProperties.primaryColor || "#0F172A";
-
-  // Gravity calculation
-  let hGravity = "Gravity.LEFT";
-  if (screenProperties.alignHorizontal === "center") hGravity = "Gravity.CENTER_HORIZONTAL";
-  if (screenProperties.alignHorizontal === "right") hGravity = "Gravity.RIGHT";
-
-  let vGravity = "Gravity.TOP";
-  if (screenProperties.alignVertical === "center") vGravity = "Gravity.CENTER_VERTICAL";
-  if (screenProperties.alignVertical === "bottom") vGravity = "Gravity.BOTTOM";
-
-  const componentDecls: string[] = [];
-  const eventListeners: string[] = [];
-
-  let compCounter = 0;
-
-  function processComponent(comp: AndroidComponent, parentVar: string, inHorizontal = false) {
-    compCounter++;
-    const vName = `view_${comp.name.replace(/[^a-zA-Z0-9_]/g, "")}_${compCounter}`;
-    const p = comp.props || {};
-
-    const containerTypes = [
-      "ScrollView",
-      "Card",
-      "Card Layout",
-      "CardLayout",
-      "Form",
-      "Column",
-      "Row",
-      "Horizontal Layout",
-      "HorizontalLayout",
-      "Vertical Layout",
-      "VerticalLayout",
-      "Box",
-      "Container",
-      "MainContainer",
-      "LinearLayout",
-      "FrameLayout",
-      "Dialog",
-      "Bottom Sheet",
-      "Drawer",
-      "Layouts",
-    ];
-
-    const isContainer = (comp.children && comp.children.length > 0) || containerTypes.includes(comp.type);
-
-    switch (comp.type) {
-      case "Toolbar": {
-        // Toolbar only rendered if titleVisible is true
-        if (isTitleVisible) {
-          componentDecls.push(`
-        TextView ${vName} = new TextView(this);
-        ${vName}.setText("${(p.title || displayScreenTitle).replace(/"/g, '\\"').replace(/\n/g, ' ')}");
-        ${vName}.setTextColor(Color.parseColor("${p.textColor || "#FFFFFF"}"));
-        ${vName}.setBackgroundColor(Color.parseColor("${p.backgroundColor || primaryThemeColor}"));
-        ${vName}.setTextSize(18f);
-        ${vName}.setPadding(32, 32, 32, 32);
-        ${vName}.setTypeface(null, android.graphics.Typeface.BOLD);
-        ${vName}.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        ${parentVar}.addView(${vName});
-        `);
-        }
-        break;
-      }
-
-      case "Text":
-      case "Text Label": {
-        const lpWidth = inHorizontal ? "LinearLayout.LayoutParams.WRAP_CONTENT" : "LinearLayout.LayoutParams.MATCH_PARENT";
-        componentDecls.push(`
-        TextView ${vName} = new TextView(this);
-        ${vName}.setText("${(p.text || "Text Label").replace(/"/g, '\\"').replace(/\n/g, '\\n')}");
-        ${vName}.setTextColor(Color.parseColor("${p.textColor || "#0F172A"}"));
-        ${vName}.setTextSize(${p.fontSize || 16}f);
-        ${p.fontWeight === "bold" ? `${vName}.setTypeface(null, android.graphics.Typeface.BOLD);` : ""}
-        ${vName}.setPadding(${p.padding !== undefined ? p.padding : 16}, ${p.padding !== undefined ? p.padding : 12}, ${p.padding !== undefined ? p.padding : 16}, ${p.padding !== undefined ? p.padding : 12});
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(${lpWidth}, LinearLayout.LayoutParams.WRAP_CONTENT);
-        ${vName}_lp.setMargins(${p.margin !== undefined ? p.margin : 8}, ${p.margin !== undefined ? p.margin : 8}, ${p.margin !== undefined ? p.margin : 8}, ${p.margin !== undefined ? p.margin : 8});
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "Button": {
-        const btnText = (p.text || "Click Action").replace(/"/g, '\\"').replace(/\n/g, ' ');
-        const bgHex = p.backgroundColor || "#2563EB";
-        const lpWidth = inHorizontal ? "LinearLayout.LayoutParams.WRAP_CONTENT" : "LinearLayout.LayoutParams.MATCH_PARENT";
-        componentDecls.push(`
-        Button ${vName} = new Button(this);
-        ${vName}.setText("${btnText}");
-        ${vName}.setTextColor(Color.parseColor("${p.textColor || "#FFFFFF"}"));
-        ${vName}.setBackgroundColor(Color.parseColor("${bgHex}"));
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(${lpWidth}, LinearLayout.LayoutParams.WRAP_CONTENT);
-        ${vName}_lp.setMargins(${p.margin !== undefined ? p.margin : 16}, ${p.margin !== undefined ? p.margin : 12}, ${p.margin !== undefined ? p.margin : 16}, ${p.margin !== undefined ? p.margin : 12});
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-
-        // Attach click logic listener
-        const logic = initialScreen.logicBlocks?.find(
-          (b) => (b as any).targetComponent === comp.id || b.event?.startsWith(`${comp.name}.`)
-        );
-        const toastMsg = logic?.actions?.find((a) => a.actionType === "toast")?.message || `${btnText} clicked!`;
-
-        eventListeners.push(`
-        ${vName}.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "${toastMsg.replace(/"/g, '\\"')}", Toast.LENGTH_SHORT).show();
-            }
-        });
-        `);
-        break;
-      }
-
-      case "TextField":
-      case "Text Input":
-      case "Password Input": {
-        const lpCode = inHorizontal
-          ? `new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)`
-          : `new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)`;
-        componentDecls.push(`
-        EditText ${vName} = new EditText(this);
-        ${vName}.setHint("${(p.hint || "Enter text here...").replace(/"/g, '\\"')}");
-        ${vName}.setPadding(24, 20, 24, 20);
-        LinearLayout.LayoutParams ${vName}_lp = ${lpCode};
-        ${vName}_lp.setMargins(16, 8, 16, 8);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "Checkbox": {
-        componentDecls.push(`
-        CheckBox ${vName} = new CheckBox(this);
-        ${vName}.setText("${(p.text || "Checkbox Option").replace(/"/g, '\\"')}");
-        ${vName}.setPadding(16, 8, 16, 8);
-        ${vName}.setChecked(${p.checked !== false});
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "Switch": {
-        componentDecls.push(`
-        Switch ${vName} = new Switch(this);
-        ${vName}.setText("${(p.text || "Enable toggle").replace(/"/g, '\\"')}");
-        ${vName}.setPadding(16, 8, 16, 8);
-        ${vName}.setChecked(${p.checked !== false});
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "Slider": {
-        componentDecls.push(`
-        SeekBar ${vName} = new SeekBar(this);
-        ${vName}.setMax(100);
-        ${vName}.setProgress(${p.value || 50});
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        ${vName}_lp.setMargins(16, 12, 16, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "Progress": {
-        componentDecls.push(`
-        ProgressBar ${vName} = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        ${vName}.setMax(100);
-        ${vName}.setProgress(${p.progress || 60});
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        ${vName}_lp.setMargins(16, 12, 16, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "Card": {
-        componentDecls.push(`
-        LinearLayout ${vName} = new LinearLayout(this);
-        ${vName}.setOrientation(LinearLayout.VERTICAL);
-        ${vName}.setPadding(${p.padding || 24}, ${p.padding || 24}, ${p.padding || 24}, ${p.padding || 24});
-        ${vName}.setBackgroundColor(Color.parseColor("${p.backgroundColor || "#FFFFFF"}"));
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(${inHorizontal ? "0" : "LinearLayout.LayoutParams.MATCH_PARENT"}, LinearLayout.LayoutParams.WRAP_CONTENT${inHorizontal ? ", 1.0f" : ""});
-        ${vName}_lp.setMargins(${p.margin || 16}, 12, ${p.margin || 16}, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        if (comp.children && comp.children.length > 0) {
-          comp.children.forEach((child) => processComponent(child, vName, false));
-        }
-        break;
-      }
-
-      case "Recycler/List": {
-        const items = p.items || ["Item 1", "Item 2", "Item 3", "Item 4"];
-        const itemCode = items
-          .map(
-            (it: string, idx: number) => `
-        TextView item_${compCounter}_${idx} = new TextView(this);
-        item_${compCounter}_${idx}.setText("• ${it.replace(/"/g, '\\"')}");
-        item_${compCounter}_${idx}.setPadding(24, 16, 24, 16);
-        item_${compCounter}_${idx}.setTextSize(15f);
-        ${vName}.addView(item_${compCounter}_${idx});
-        `
-          )
-          .join("\n");
-
-        componentDecls.push(`
-        LinearLayout ${vName} = new LinearLayout(this);
-        ${vName}.setOrientation(LinearLayout.VERTICAL);
-        ${vName}.setPadding(16, 16, 16, 16);
-        ${vName}.setBackgroundColor(Color.parseColor("#F1F5F9"));
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        ${vName}_lp.setMargins(16, 12, 16, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        
-        ${itemCode}
-        `);
-        break;
-      }
-
-      case "Image": {
-        componentDecls.push(`
-        ImageView ${vName} = new ImageView(this);
-        ${vName}.setImageResource(android.R.drawable.ic_menu_gallery);
-        ${vName}.setPadding(16, 16, 16, 16);
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(${inHorizontal ? "0" : "LinearLayout.LayoutParams.MATCH_PARENT"}, 300${inHorizontal ? ", 1.0f" : ""});
-        ${vName}_lp.setMargins(16, 12, 16, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "WebView": {
-        componentDecls.push(`
-        WebView ${vName} = new WebView(this);
-        ${vName}.getSettings().setJavaScriptEnabled(true);
-        ${vName}.loadUrl("${p.url || "https://android.com"}");
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 400);
-        ${vName}_lp.setMargins(16, 12, 16, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      case "YouTube Player":
-      case "YouTubePlayer": {
-        componentDecls.push(`
-        WebView ${vName} = new WebView(this);
-        ${vName}.getSettings().setJavaScriptEnabled(true);
-        ${vName}.getSettings().setDomStorageEnabled(true);
-        String yUrl_${vName} = "${(p.url || p.videoUrl || "").replace(/"/g, '\\"')}";
-        String videoId_${vName} = "";
-        java.util.regex.Matcher m_${vName} = java.util.regex.Pattern.compile("(?:youtu\\\\.be/|youtube\\\\.com/(?:embed/|v/|watch\\\\?v=|watch\\\\?.+&v=))([\\\\w-]{11})").matcher(yUrl_${vName});
-        if (m_${vName}.find()) { videoId_${vName} = m_${vName}.group(1); }
-        String html_${vName} = "<html><head><meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1.0\\"><style>body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;}iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src=\\"https://www.youtube.com/embed/" + videoId_${vName} + "?autoplay=1&playsinline=1\\" allow=\\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\\" allowfullscreen></iframe></body></html>";
-        ${vName}.loadDataWithBaseURL("https://www.youtube.com", html_${vName}, "text/html", "utf-8", null);
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 450);
-        ${vName}_lp.setMargins(16, 12, 16, 12);
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-        break;
-      }
-
-      default: {
-        if (isContainer) {
-          const isHorizContainer =
-            comp.type === "Row" ||
-            comp.type === "Horizontal Layout" ||
-            comp.type === "HorizontalLayout" ||
-            comp.type === "Horizontal Scroll Layout" ||
-            comp.type === "HorizontalScrollLayout" ||
-            comp.type.toLowerCase().includes("horizontal") ||
-            p.orientation === "horizontal";
-          const orient = isHorizContainer ? "LinearLayout.HORIZONTAL" : "LinearLayout.VERTICAL";
-
-          componentDecls.push(`
-        LinearLayout ${vName} = new LinearLayout(this);
-        ${vName}.setOrientation(${orient});
-        ${vName}.setPadding(${p.padding !== undefined ? p.padding : 12}, ${p.padding !== undefined ? p.padding : 12}, ${p.padding !== undefined ? p.padding : 12}, ${p.padding !== undefined ? p.padding : 12});
-        ${p.backgroundColor ? `${vName}.setBackgroundColor(Color.parseColor("${p.backgroundColor}"));` : ""}
-        LinearLayout.LayoutParams ${vName}_lp = new LinearLayout.LayoutParams(${inHorizontal ? "0" : "LinearLayout.LayoutParams.MATCH_PARENT"}, LinearLayout.LayoutParams.WRAP_CONTENT${inHorizontal ? ", 1.0f" : ""});
-        ${vName}_lp.setMargins(${p.margin !== undefined ? p.margin : 8}, ${p.margin !== undefined ? p.margin : 8}, ${p.margin !== undefined ? p.margin : 8}, ${p.margin !== undefined ? p.margin : 8});
-        ${vName}.setLayoutParams(${vName}_lp);
-        ${parentVar}.addView(${vName});
-        `);
-          if (comp.children && comp.children.length > 0) {
-            comp.children.forEach((child) => processComponent(child, vName, isHorizContainer));
-          }
-        } else {
-          componentDecls.push(`
-        TextView ${vName} = new TextView(this);
-        ${vName}.setText("${(p.text || comp.name || comp.type).replace(/"/g, '\\"')}");
-        ${vName}.setPadding(16, 12, 16, 12);
-        ${parentVar}.addView(${vName});
-        `);
-        }
-        break;
-      }
-    }
-
-    // Handle Visibility Mode (View.VISIBLE, View.INVISIBLE, View.GONE)
-    const visMode = p.visibility || (p.visible === false ? "gone" : "visible");
-    if (visMode === "invisible") {
-      componentDecls.push(`        ${vName}.setVisibility(android.view.View.INVISIBLE);`);
-    } else if (visMode === "gone") {
-      componentDecls.push(`        ${vName}.setVisibility(android.view.View.GONE);`);
-    }
-
-    // Process logic blocks targeting this component
-    const blocks = initialScreen.logicBlocks?.filter(
-      (b) => (b as any).targetComponent === comp.id || b.event?.startsWith(`${comp.name}.`)
-    ) || [];
-
-    blocks.forEach((block) => {
-      const actionStatements: string[] = [];
-      (block.actions || []).forEach((act) => {
-        switch (act.actionType) {
-          case "toast":
-            actionStatements.push(`Toast.makeText(MainActivity.this, "${(act.message || "Action executed").replace(/"/g, '\\"')}", Toast.LENGTH_SHORT).show();`);
-            break;
-          case "openBrowser":
-            actionStatements.push(`openInAppWebView("${act.url || "http://192.168.10.7:3000/companion-live"}");`);
-            break;
-          case "share":
-            actionStatements.push(`try { Intent sendIntent = new Intent(Intent.ACTION_SEND); sendIntent.setType("text/plain"); sendIntent.putExtra(Intent.EXTRA_TEXT, "${(act.message || "Shared from app").replace(/"/g, '\\"')} "); startActivity(Intent.createChooser(sendIntent, "Share")); } catch(Exception e){}`);
-            break;
-          case "copyToClipboard":
-            actionStatements.push(`try { ClipboardManager cb = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE); cb.setPrimaryClip(ClipData.newPlainText("label", "${(act.value || "").replace(/"/g, '\\"')}")); Toast.makeText(MainActivity.this, "Copied!", Toast.LENGTH_SHORT).show(); } catch(Exception e){}`);
-            break;
-          case "vibrate":
-            actionStatements.push(`try { Vibrator vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE); if (vib != null) vib.vibrate(200); } catch(Exception e){}`);
-            break;
-          case "navigate":
-            actionStatements.push(`Toast.makeText(MainActivity.this, "Navigating to: ${(act.targetScreen || "Details").replace(/"/g, '\\"')}", Toast.LENGTH_SHORT).show();`);
-            break;
-          default:
-            actionStatements.push(`Toast.makeText(MainActivity.this, "Action: ${act.actionType}", Toast.LENGTH_SHORT).show();`);
-            break;
-        }
-      });
-
-      if (actionStatements.length > 0) {
-        eventListeners.push(`
-        ${vName}.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ${actionStatements.join("\n                ")}
-            }
-        });
-        `);
-      }
-    });
-  }
-
-  // Process root component tree
-  if (initialScreen.rootComponent) {
-    processComponent(initialScreen.rootComponent, "contentLayout");
-  }
-
-  // Header code block if titleVisible is true
-  const topHeaderCode = isTitleVisible
-    ? `
-        TextView appHeader = new TextView(this);
-        appHeader.setText("${displayScreenTitle.replace(/"/g, '\\"').replace(/\n/g, ' ')}");
-        appHeader.setTextColor(Color.WHITE);
-        appHeader.setBackgroundColor(Color.parseColor("${primaryThemeColor}"));
-        appHeader.setTextSize(20f);
-        appHeader.setPadding(36, 36, 36, 36);
-        appHeader.setTypeface(null, android.graphics.Typeface.BOLD);
-        appHeader.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        contentLayout.addView(appHeader);
-`
-    : "";
-
-  return `package ${packageName};
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.*;
-import android.graphics.Color;
-import android.view.Gravity;
-import android.content.Intent;
-import android.net.Uri;
-import android.content.Context;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.os.Vibrator;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.webkit.WebSettings;
-
-public class MainActivity extends Activity {
-    private WebView activeWebView = null;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        // Root Container
-        ScrollView rootScroll = new ScrollView(this);
-        rootScroll.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        rootScroll.setBackgroundColor(Color.parseColor("${screenBgColor}"));
-
-        LinearLayout contentLayout = new LinearLayout(this);
-        contentLayout.setOrientation(LinearLayout.VERTICAL);
-        contentLayout.setGravity(${hGravity} | ${vGravity});
-        contentLayout.setLayoutParams(new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        rootScroll.addView(contentLayout);
-
-        ${topHeaderCode}
-
-        // Render Generated Components
-        ${componentDecls.join("\n")}
-
-        // Attach Interactive Event Listeners
-        ${eventListeners.join("\n")}
-
-        setContentView(rootScroll);
-    }
-
-    public void openInAppWebView(final String targetUrl) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    WebView webView = new WebView(MainActivity.this);
-                    WebSettings settings = webView.getSettings();
-                    settings.setJavaScriptEnabled(true);
-                    settings.setDomStorageEnabled(true);
-                    settings.setDatabaseEnabled(true);
-                    settings.setAllowFileAccess(true);
-                    settings.setAllowContentAccess(true);
-                    settings.setUseWideViewPort(true);
-                    settings.setLoadWithOverviewMode(true);
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                    }
-                    
-                    webView.setWebViewClient(new WebViewClient() {
-                        @Override
-                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                            view.loadUrl(url);
-                            return true;
-                        }
-                    });
-                    
-                    activeWebView = webView;
-                    webView.loadUrl(targetUrl);
-                    setContentView(webView);
-                } catch (Exception e) {
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)));
-                    } catch (Exception ex) {}
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (activeWebView != null && activeWebView.canGoBack()) {
-            activeWebView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-}
-`;
+// Generate Native Java Activity code from Visual Screens & Components using modular native-compiler
+export function generateJavaMainActivity(config: ProjectConfig, screens: AndroidScreen[]): string {
+  return compileNativeMainActivityJava(config, screens);
 }
 
-// Main Build function executing full Android SDK pipeline
-export async function buildApkBinary(config: ProjectConfig, screens: AndroidScreen[]): Promise<ApkBuildResult> {
+// Main Build function executing full Android SDK pipeline with Hybrid Formula routing
+export async function buildApkBinary(
+  config: ProjectConfig,
+  screens: AndroidScreen[],
+  options?: BuildOptions
+): Promise<ApkBuildResult> {
   const buildId = `build_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const logs: string[] = [];
+
+  // Step 0: Pre-build Diagnostics & Intermediate Representation Validation
+  logs.push(`> [Pre-Build] Validating AppIR and Architecture Configuration...`);
+  const validation = buildIntermediateRepresentation(config, screens);
+  if (!validation.valid) {
+    const errorMsgs = validation.diagnostics
+      .filter((d) => d.severity === "error")
+      .map((d) => `• [${d.code}] ${d.message} (${d.remediation || ""})`)
+      .join("\n");
+    logs.push(`> [FATAL VALIDATION ERROR]:\n${errorMsgs}`);
+    return {
+      success: false,
+      buildId,
+      error: `Pre-build validation failed:\n${errorMsgs}`,
+      diagnostics: validation.diagnostics,
+      logs,
+    };
+  }
+
+  // Step 0.1: Check if project should route to Production Gradle Engine
+  const target = options?.target || "apk";
+  const requestedGradle = options?.engine === "gradle" || target === "aab";
+  const autoNeedsGradle = (!options?.engine || options?.engine === "auto") && validation.recommendedEngine === "PRODUCTION_GRADLE";
+  const gradleExec = findGradleExecutable();
+
+  if (requestedGradle || autoNeedsGradle) {
+    if (gradleExec) {
+      logs.push(`> [Hybrid Engine Router] Routing to Production Gradle Engine (${validation.ir.reasonForEngine})...`);
+      const gradleRes = await buildProductionGradleArtifact(config, screens, {
+        target: target,
+        mode: options?.mode || "release",
+      });
+      return {
+        success: gradleRes.success,
+        buildId: gradleRes.buildId,
+        apkPath: gradleRes.artifactPath,
+        apkSizeMb: gradleRes.artifactSizeMb,
+        downloadUrl: gradleRes.downloadUrl,
+        logs: [...logs, ...gradleRes.logs],
+        error: gradleRes.error,
+        diagnostics: validation.diagnostics,
+      };
+    } else if (target === "aab") {
+      const aabErr = "Google Play Store AAB generation requires Gradle. Gradle executable was not found on host machine.";
+      logs.push(`> [ERROR] ${aabErr}`);
+      return {
+        success: false,
+        buildId,
+        error: aabErr,
+        diagnostics: validation.diagnostics,
+        logs,
+      };
+    } else {
+      logs.push(`> [Hybrid Engine Router] Gradle not found. Falling back to Fast 3s Offline Java Compiler.`);
+    }
+  }
 
   const tools = getSdkTools();
   logs.push(`> Build Engine Initialized [Build ID: ${buildId}]`);
   logs.push(`> Target SDK: ${config.targetSdk || 34} | Package: ${config.packageName}`);
 
   if (!tools.isAvailable) {
-    logs.push(`> Notice: Host environment JDK/SDK warning. Synthesizing user app binary package.`);
-    return createFallbackBinaryApk(config, buildId, logs);
+    const missing: string[] = [];
+    if (!fs.existsSync(tools.java)) missing.push("java.exe");
+    if (!fs.existsSync(tools.javac)) missing.push("javac.exe");
+    if (!fs.existsSync(tools.aapt2)) missing.push("aapt2.exe");
+    if (!fs.existsSync(tools.d8Bat)) missing.push("d8.bat");
+    if (!fs.existsSync(tools.platformJar)) missing.push("android.jar");
+    const errText = `Required Android SDK or Java JDK tools missing: ${missing.join(", ")}. Check SDK Manager in settings.`;
+    logs.push(`> [BUILD ERROR]: ${errText}`);
+    return {
+      success: false,
+      buildId,
+      error: errText,
+      logs,
+    };
   }
 
   const scratchBuildDir = path.join(process.cwd(), "scratch", "builds", buildId);
@@ -679,7 +266,9 @@ export async function buildApkBinary(config: ProjectConfig, screens: AndroidScre
 
     // 1. Write AndroidManifest.xml
     logs.push(`> Generating AndroidManifest.xml for ${config.packageName}...`);
-    const permXml = (config.permissions || ["android.permission.INTERNET"])
+    const hardwareCompiler = new HardwareCompiler();
+    const allPermissions = hardwareCompiler.collectPermissions(config.permissions, screens);
+    const permXml = allPermissions
       .map((p) => `    <uses-permission android:name="${p}" />`)
       .join("\n");
 
@@ -690,8 +279,8 @@ export async function buildApkBinary(config: ProjectConfig, screens: AndroidScre
     android:versionName="${config.versionName || "1.0.0"}">
     <uses-sdk android:minSdkVersion="${config.minSdk || 21}" android:targetSdkVersion="${config.targetSdk || 34}" />
 ${permXml}
-    <application android:label="@string/app_name" android:hasCode="true" android:usesCleartextTraffic="true" android:icon="@android:drawable/sym_def_app_icon">
-        <activity android:name=".MainActivity" android:exported="true">
+    <application android:label="@string/app_name" android:hasCode="true" android:usesCleartextTraffic="true" android:icon="@android:drawable/sym_def_app_icon" android:theme="@android:style/Theme.NoTitleBar">
+        <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -716,11 +305,20 @@ ${permXml}
 </resources>`;
     fs.writeFileSync(path.join(resDir, "strings.xml"), stringsXml, "utf8");
 
-    // 3. Write Java Activity
-    logs.push(`> Compiling Kotlin / Jetpack Compose to Android Java Activity Bytecode...`);
+    // 3. Write Java Activity & Gradle Assembly
+    logs.push(`> Compiling Visual Screens & Logic into Native Android Bytecode...`);
     const javaCode = generateJavaMainActivity(config, screens);
     const mainActivityPath = path.join(srcDir, "MainActivity.java");
     fs.writeFileSync(mainActivityPath, javaCode, "utf8");
+
+    // Also assemble full Gradle project structure for export/Gradle compatibility
+    try {
+      const gradleAssembly = GradleBuilder.assembleProjectTree(path.join(scratchBuildDir, "gradle_project"), config);
+      fs.writeFileSync(path.join(gradleAssembly.srcMainJavaDir, "MainActivity.java"), javaCode, "utf8");
+      fs.writeFileSync(gradleAssembly.manifestPath, manifestXml, "utf8");
+    } catch (e: any) {
+      // Non-fatal
+    }
 
     // Step 1: AAPT2 Compile & Link
     logs.push(`> Task :app:processReleaseResources [AAPT2 resource binary compilation]`);
@@ -852,48 +450,22 @@ ${permXml}
       success: true,
       buildId,
       apkPath: finalApkPath,
-      apkSizeMb: `${sizeMb} MB`,
+      apkSizeMb: sizeMb,
       downloadUrl: `/api/build/download-apk?id=${buildId}`,
       logs,
     };
   } catch (err: any) {
+    const errorMsg = err?.message || "Unknown error during native APK compilation";
     console.error("APK compilation error:", err);
-    logs.push(`> Build Notice: ${err?.message || "Synthesizing custom app package"}`);
-    return createFallbackBinaryApk(config, buildId, logs);
+    logs.push(`> [BUILD FAILED]: ${errorMsg}`);
+    logs.push(`> Tip: Review the compilation logs above or export the full Gradle project to build in Android Studio.`);
+    return {
+      success: false,
+      buildId,
+      error: errorMsg,
+      logs,
+    };
   }
-}
-
-// Generates a fully signed, 100% valid Android APK binary for user project
-async function createFallbackBinaryApk(config: ProjectConfig, buildId: string, logs: string[]): Promise<ApkBuildResult> {
-  const scratchBuildDir = path.join(process.cwd(), "scratch", "builds", buildId);
-  fs.mkdirSync(scratchBuildDir, { recursive: true });
-  const finalApkPath = path.join(scratchBuildDir, "app-release.apk");
-
-  // Create customized signed APK binary structure for user's app
-  const zip = new JSZip();
-  zip.file("AndroidManifest.xml", "Binary Manifest Content");
-  zip.file("resources.arsc", "Binary Resource Table");
-  zip.file("classes.dex", "Dalvik Executable Code");
-  zip.file("META-INF/MANIFEST.MF", `Manifest-Version: 1.0\nCreated-By: DroidForge Studio\nApp-Name: ${config.appName}\nPackage: ${config.packageName}\n`);
-  zip.file("META-INF/CERT.SF", "Signature-Version: 1.0\n");
-  zip.file("META-INF/CERT.RSA", "RSA Signature");
-
-  const buf = await zip.generateAsync({ type: "nodebuffer" });
-  fs.writeFileSync(finalApkPath, buf);
-
-  const stats = fs.statSync(finalApkPath);
-  const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
-
-  logs.push(`> Task :app:packageRelease [APK Signature Scheme v2/v3 Verified] -> ${config.appName.toLowerCase().replace(/[^a-z0-9]/g, "_")}-release.apk (${sizeMb} MB)\n\nBUILD SUCCESSFUL!`);
-
-  return {
-    success: true,
-    buildId,
-    apkPath: finalApkPath,
-    apkSizeMb: `${sizeMb} MB`,
-    downloadUrl: `/api/build/download-apk?id=${buildId}`,
-    logs,
-  };
 }
 
 // Generates and returns path to prebuilt Master DroidForge Companion APK package

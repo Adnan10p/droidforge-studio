@@ -49,6 +49,7 @@ interface ScreenManagerModalProps {
   onDeleteScreen: (screenId: string) => void;
   onDuplicateScreen: (screenId: string) => void;
   onPasteScreen: (copiedScreen: AndroidScreen) => void;
+  onCopyScreen?: (screen: AndroidScreen) => void;
   onSetLauncherScreen: (screenId: string) => void;
   initialMode?: "list" | "create";
 }
@@ -64,6 +65,7 @@ export const ScreenManagerModal: React.FC<ScreenManagerModalProps> = ({
   onDeleteScreen,
   onDuplicateScreen,
   onPasteScreen,
+  onCopyScreen,
   onSetLauncherScreen,
   initialMode = "list",
 }) => {

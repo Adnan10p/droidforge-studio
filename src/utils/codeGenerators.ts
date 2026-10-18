@@ -192,10 +192,26 @@ ${indent}    )
 ${indent}}`;
 
       case "Progress":
+      case "ProgressBar":
         return `${indent}LinearProgressIndicator(
 ${indent}    progress = { ${((p.progress || 50) / 100).toFixed(2)}f },
 ${indent}    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
 ${indent}    color = MaterialTheme.colorScheme.primary
+${indent})`;
+
+      case "AdMobBanner":
+      case "AdBannerView":
+      case "AdBanner":
+        return `${indent}// Google Mobile Ads (AdMob Banner)
+${indent}AndroidView(
+${indent}    factory = { ctx ->
+${indent}        com.google.android.gms.ads.AdView(ctx).apply {
+${indent}            setAdSize(com.google.android.gms.ads.AdSize.BANNER)
+${indent}            adUnitId = "${p.adUnitId || "ca-app-pub-3940256099942544/6300978111"}"
+${indent}            loadAd(com.google.android.gms.ads.AdRequest.Builder().build())
+${indent}        }
+${indent}    },
+${indent}    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
 ${indent})`;
 
       case "Location/GPS":
@@ -634,8 +650,15 @@ export function generateAndroidManifest(config: ProjectConfig, screens: AndroidS
 
 
 
-  if (config.googleAdsAppId) {
-    metaDataLines.push(`        <!-- Google Ads / AdMob App ID -->\n        <meta-data\n            android:name="com.google.android.gms.ads.APPLICATION_ID"\n            android:value="${config.googleAdsAppId}" />`);
+  const hasAds = screens.some((s) =>
+    getAllComponentsFromScreen(s).some((c) =>
+      c.type.includes("AdMob") || c.type.includes("AdBanner") || c.type.includes("NativeAd") || c.type.includes("Rewarded")
+    )
+  );
+
+  const adsAppId = config.googleAdsAppId || (hasAds ? "ca-app-pub-3940256099942544~3347511713" : "");
+  if (adsAppId) {
+    metaDataLines.push(`        <!-- Google Ads / AdMob App ID -->\n        <meta-data\n            android:name="com.google.android.gms.ads.APPLICATION_ID"\n            android:value="${adsAppId}" />`);
   }
 
   if (config.googleMapsApiKey) {

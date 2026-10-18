@@ -37,7 +37,7 @@ interface GlobalSearchModalProps {
   components: AndroidComponent[];
   onSelectNode: (nodeId: string) => void;
   onSelectVariable: (variable: StateVariable) => void;
-  onSelectComponent: (componentId: string) => void;
+  onSelectComponent?: (componentId: string) => void;
 }
 
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({

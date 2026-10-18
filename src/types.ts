@@ -96,8 +96,8 @@ export interface ComponentPropDef {
   margin?: number;
   cornerRadius?: number;
   elevation?: number;
-  layoutWidth?: "wrap_content" | "match_parent" | number;
-  layoutHeight?: "wrap_content" | "match_parent" | number;
+  layoutWidth?: "wrap_content" | "match_parent" | "fill_max_width" | "100%" | number | string;
+  layoutHeight?: "wrap_content" | "match_parent" | "fill_max_height" | "100%" | number | string;
   orientation?: "vertical" | "horizontal";
   icon?: string;
   hasIcon?: boolean;
@@ -240,6 +240,7 @@ export interface StateVariable {
   name: string;
   type: "String" | "Int" | "Boolean" | "List" | "Double";
   initialValue: string;
+  defaultValue?: string;
   description?: string;
 }
 
@@ -334,6 +335,7 @@ export interface AndroidScreen {
   title: string;
   isInitial?: boolean;
   rootComponent: AndroidComponent;
+  components?: AndroidComponent[];
   logicBlocks: LogicBlock[];
   stateVariables?: StateVariable[];
   properties?: ScreenProperties;
@@ -347,8 +349,8 @@ export interface AndroidDependency {
   group: string;
   artifact: string;
   version: string;
-  description: string;
-  enabled: boolean;
+  description?: string;
+  enabled?: boolean;
   category: "Compose" | "Networking" | "Database" | "Media" | "Firebase" | "Native" | "Utility";
 }
 
@@ -368,7 +370,7 @@ export interface ProjectAsset {
   name: string;
   fileName: string;
   type: "drawable" | "mipmap" | "font" | "raw" | "asset";
-  format: "png" | "webp" | "svg" | "ttf" | "json" | "mp3" | "mp4";
+  format: "png" | "webp" | "svg" | "ttf" | "json" | "mp3" | "mp4" | "wav";
   size: string;
   url?: string;
   targetResDir: string;
@@ -430,6 +432,7 @@ export interface Material3ShapeConfig {
 }
 
 export interface Material3Theme {
+  name?: string;
   mode: "light" | "dark" | "system";
   useDynamicColor: boolean; // Android 12+ Material You
   lightColors: Material3ColorScheme;
@@ -464,6 +467,8 @@ export interface ProjectConfig {
   splashBackgroundColor?: string;
 
   // Material 3 Global Theme
+  primaryColor?: string;
+  themeColor?: string;
   theme?: Material3Theme;
 
   // Ad Networks & Monetization SDK Keys

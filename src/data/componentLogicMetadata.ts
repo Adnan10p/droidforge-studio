@@ -1413,6 +1413,345 @@ export const COMPONENT_LOGIC_META_MAP: Record<string, ComponentLogicMeta> = {
     ],
     recommendedActions: ["toast", "setVariable", "setProperty"],
   },
+
+  // 29. Accelerometer
+  Accelerometer: {
+    componentType: "Accelerometer",
+    label: "Accelerometer Sensor",
+    category: "Device Sensors",
+    kind: "NON_VISIBLE",
+    iconName: "Activity",
+    description: "Physical device acceleration & shake detection sensor",
+    supportedEvents: [
+      {
+        id: "AccelerationChanged",
+        name: "Acceleration Changed",
+        category: "sensor",
+        description: "Emitted when device acceleration values change",
+        outputs: [
+          { name: "xAccel", type: "Float", description: "X axis acceleration (m/s²)" },
+          { name: "yAccel", type: "Float", description: "Y axis acceleration (m/s²)" },
+          { name: "zAccel", type: "Float", description: "Z axis acceleration (m/s²)" },
+        ],
+        badgeColor: "bg-orange-500/20 text-orange-300 border-orange-500/40",
+      },
+      {
+        id: "Shaking",
+        name: "Device Shaking",
+        category: "sensor",
+        description: "Triggered when user shakes device rapidly",
+        outputs: [],
+        badgeColor: "bg-red-500/20 text-red-300 border-red-500/40",
+      },
+    ],
+    supportedProperties: [
+      { name: "enabled", label: "Enabled", type: "boolean", defaultValue: true, description: "Whether sensor is active" },
+      { name: "minimumInterval", label: "Min Interval (ms)", type: "number", defaultValue: 400, description: "Sampling interval" },
+      { name: "sensitivity", label: "Sensitivity", type: "enum", options: ["weak", "moderate", "strong"], defaultValue: "moderate", description: "Shake detection threshold" },
+    ],
+    supportedFunctions: [
+      { id: "StartListening", name: "Start Listening", description: "Enables sensor listener", params: [] },
+      { id: "StopListening", name: "Stop Listening", description: "Disables sensor listener", params: [] },
+    ],
+    recommendedActions: ["vibrate", "toast", "setVariable", "setProperty"],
+  },
+
+  // 30. Gyroscope
+  Gyroscope: {
+    componentType: "Gyroscope",
+    label: "Gyroscope Sensor",
+    category: "Device Sensors",
+    kind: "NON_VISIBLE",
+    iconName: "Compass",
+    description: "Measures 3-axis angular rate of rotation in rad/s",
+    supportedEvents: [
+      {
+        id: "GyroscopeChanged",
+        name: "Rotation Rate Changed",
+        category: "sensor",
+        description: "Emitted on physical device orientation rotation",
+        outputs: [
+          { name: "xAngularSpeed", type: "Float", description: "X-axis angular speed (rad/s)" },
+          { name: "yAngularSpeed", type: "Float", description: "Y-axis angular speed (rad/s)" },
+          { name: "zAngularSpeed", type: "Float", description: "Z-axis angular speed (rad/s)" },
+        ],
+        badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+      },
+    ],
+    supportedProperties: [
+      { name: "enabled", label: "Enabled", type: "boolean", defaultValue: true, description: "Whether gyroscope listener is active" },
+    ],
+    supportedFunctions: [],
+    recommendedActions: ["setVariable", "setProperty"],
+  },
+
+  // 31. Camera
+  Camera: {
+    componentType: "Camera",
+    label: "Camera Device",
+    category: "Camera & Scanning",
+    kind: "NON_VISIBLE",
+    iconName: "Camera",
+    description: "Captures photos and videos via Android Camera hardware",
+    permissions: ["android.permission.CAMERA"],
+    supportedEvents: [
+      {
+        id: "AfterPicture",
+        name: "After Picture Taken",
+        category: "sensor",
+        description: "Fires when user captures a photo",
+        outputs: [
+          { name: "imagePath", type: "String", description: "Local URI or file path of captured photo" },
+        ],
+        badgeColor: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40",
+      },
+    ],
+    supportedProperties: [
+      { name: "useFrontFacing", label: "Use Front Camera", type: "boolean", defaultValue: false, description: "Default to selfie camera" },
+    ],
+    supportedFunctions: [
+      { id: "TakePicture", name: "Take Picture", description: "Launches camera intent to capture photo", params: [] },
+    ],
+    recommendedActions: ["setProperty", "toast", "databaseInsert"],
+  },
+
+  // 32. BarcodeScanner
+  BarcodeScanner: {
+    componentType: "BarcodeScanner",
+    label: "QR / Barcode Scanner",
+    category: "Camera & Scanning",
+    kind: "NON_VISIBLE",
+    iconName: "Scan",
+    description: "Scans QR codes and 1D barcodes via camera ML vision",
+    permissions: ["android.permission.CAMERA"],
+    supportedEvents: [
+      {
+        id: "AfterScan",
+        name: "After Scan Completed",
+        category: "sensor",
+        description: "Fires when barcode is recognized",
+        outputs: [
+          { name: "resultValue", type: "String", description: "Decoded text payload" },
+          { name: "format", type: "String", description: "Barcode format (QR_CODE, EAN_13, etc)" },
+        ],
+        badgeColor: "bg-violet-500/20 text-violet-300 border-violet-500/40",
+      },
+    ],
+    supportedProperties: [
+      { name: "useExternalScanner", label: "Use External Scanner", type: "boolean", defaultValue: false, description: "Whether to delegate to ZXing app" },
+    ],
+    supportedFunctions: [
+      { id: "DoScan", name: "Do Scan", description: "Starts camera barcode scanner", params: [] },
+    ],
+    recommendedActions: ["copyToClipboard", "toast", "callApi", "navigate"],
+  },
+
+  // 33. SQLite
+  SQLite: {
+    componentType: "SQLite",
+    label: "SQLite Local Database",
+    category: "Files & Storage",
+    kind: "NON_VISIBLE",
+    iconName: "Database",
+    description: "Embedded offline relational SQL database for high-performance structured storage",
+    supportedEvents: [
+      {
+        id: "AfterQuery",
+        name: "After Query Executed",
+        category: "network",
+        description: "Fires when SELECT query completes",
+        outputs: [
+          { name: "resultsJson", type: "String", description: "Query results serialized as JSON array" },
+        ],
+        badgeColor: "bg-sky-500/20 text-sky-300 border-sky-500/40",
+      },
+      {
+        id: "SQLError",
+        name: "On SQL Error",
+        category: "lifecycle",
+        description: "Fires if SQL syntax or constraint failure occurs",
+        outputs: [
+          { name: "errorMessage", type: "String", description: "SQLite engine error description" },
+        ],
+        badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/40",
+      },
+    ],
+    supportedProperties: [
+      { name: "databaseName", label: "Database Name", type: "string", defaultValue: "app_database.db", description: "Database filename on device" },
+    ],
+    supportedFunctions: [
+      { id: "ExecuteSQL", name: "Execute SQL", description: "Executes raw INSERT, UPDATE, or DELETE SQL statement", params: [{ name: "sql", type: "String" }] },
+      { id: "RawQuery", name: "Raw Query", description: "Executes SELECT query and emits AfterQuery", params: [{ name: "sql", type: "String" }] },
+    ],
+    recommendedActions: ["toast", "setVariable", "setProperty"],
+  },
+
+  // 34. AdMobBanner
+  AdMobBanner: {
+    componentType: "AdMobBanner",
+    label: "Google AdMob Banner",
+    category: "Advertising UI",
+    iconName: "Megaphone",
+    description: "Standard Google AdMob banner ad unit with test ID support",
+    dependencies: [{ group: "com.google.android.gms", artifact: "play-services-ads", version: "23.3.0" }],
+    permissions: ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"],
+    supportedEvents: [
+      {
+        id: "AdLoaded",
+        name: "Ad Loaded",
+        category: "network",
+        description: "Fires when banner ad finishes downloading",
+        outputs: [],
+        badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+      },
+      {
+        id: "AdFailedToLoad",
+        name: "Ad Failed to Load",
+        category: "network",
+        description: "Fires if ad network fails to serve an ad",
+        outputs: [
+          { name: "errorCode", type: "Int", description: "Google AdMob error code" },
+          { name: "errorMessage", type: "String", description: "Error reason description" },
+        ],
+        badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/40",
+      },
+      {
+        id: "AdClicked",
+        name: "Ad Clicked",
+        category: "gesture",
+        description: "Fires when user taps the banner ad",
+        outputs: [],
+        badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/40",
+      },
+    ],
+    supportedProperties: [
+      { name: "adUnitId", label: "Ad Unit ID", type: "string", defaultValue: "ca-app-pub-3940256099942544/6300978111", description: "AdMob Banner Ad Unit (Google test ID default)" },
+      { name: "testMode", label: "Test Mode", type: "boolean", defaultValue: true, description: "Whether to serve Google test ads" },
+      { name: "adSize", label: "Ad Size", type: "enum", options: ["BANNER", "LARGE_BANNER", "MEDIUM_RECTANGLE", "FULL_BANNER"], defaultValue: "BANNER", description: "Display dimension" },
+      ...COMMON_UI_PROPERTIES,
+    ],
+    supportedFunctions: [
+      { id: "LoadAd", name: "Load Ad", description: "Requests a new banner ad from Google network", params: [] },
+    ],
+    recommendedActions: ["toast"],
+  },
+
+  // 35. AdMobInterstitial
+  AdMobInterstitial: {
+    componentType: "AdMobInterstitial",
+    label: "AdMob Interstitial Ad",
+    category: "Advertising Logic",
+    kind: "NON_VISIBLE",
+    iconName: "Megaphone",
+    description: "Full-screen interstitial advertisement displayed at natural transition points",
+    dependencies: [{ group: "com.google.android.gms", artifact: "play-services-ads", version: "23.3.0" }],
+    permissions: ["android.permission.INTERNET"],
+    supportedEvents: [
+      { id: "AdLoaded", name: "Ad Loaded", category: "network", description: "Ad is ready to display", outputs: [], badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+      { id: "AdFailedToLoad", name: "Ad Failed to Load", category: "network", description: "Ad request failed", outputs: [{ name: "errorCode", type: "Int", description: "Error code" }], badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/40" },
+      { id: "AdClosed", name: "Ad Closed", category: "lifecycle", description: "User dismissed interstitial", outputs: [], badgeColor: "bg-slate-500/20 text-slate-300 border-slate-500/40" },
+    ],
+    supportedProperties: [
+      { name: "adUnitId", label: "Ad Unit ID", type: "string", defaultValue: "ca-app-pub-3940256099942544/1033173712", description: "Google test interstitial ID" },
+    ],
+    supportedFunctions: [
+      { id: "LoadAd", name: "Load Ad", description: "Preloads full-screen ad", params: [] },
+      { id: "ShowAd", name: "Show Ad", description: "Displays loaded interstitial ad", params: [] },
+    ],
+    recommendedActions: ["toast", "navigate"],
+  },
+
+  // 36. AdMobRewarded
+  AdMobRewarded: {
+    componentType: "AdMobRewarded",
+    label: "AdMob Rewarded Video",
+    category: "Advertising Logic",
+    kind: "NON_VISIBLE",
+    iconName: "Award",
+    description: "Full-screen video ad rewarding users with in-app perks/coins upon completion",
+    dependencies: [{ group: "com.google.android.gms", artifact: "play-services-ads", version: "23.3.0" }],
+    permissions: ["android.permission.INTERNET"],
+    supportedEvents: [
+      { id: "AdLoaded", name: "Ad Loaded", category: "network", description: "Rewarded video is ready", outputs: [], badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+      { id: "UserRewarded", name: "User Rewarded", category: "network", description: "User finished watching video", outputs: [{ name: "rewardType", type: "String", description: "Coin/Gem" }, { name: "amount", type: "Int", description: "Reward quantity" }], badgeColor: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40" },
+      { id: "AdClosed", name: "Ad Closed", category: "lifecycle", description: "Ad dismissed", outputs: [], badgeColor: "bg-slate-500/20 text-slate-300 border-slate-500/40" },
+    ],
+    supportedProperties: [
+      { name: "adUnitId", label: "Ad Unit ID", type: "string", defaultValue: "ca-app-pub-3940256099942544/5224354917", description: "Google test rewarded ID" },
+    ],
+    supportedFunctions: [
+      { id: "LoadAd", name: "Load Ad", description: "Preloads rewarded ad", params: [] },
+      { id: "ShowAd", name: "Show Ad", description: "Plays rewarded video ad", params: [] },
+    ],
+    recommendedActions: ["setVariable", "toast", "preferencesSave"],
+  },
+
+  // 37. BiometricAuth
+  BiometricAuth: {
+    componentType: "BiometricAuth",
+    label: "Biometric Fingerprint / Face",
+    category: "Security",
+    kind: "NON_VISIBLE",
+    iconName: "Fingerprint",
+    description: "Hardware biometric authentication prompt via AndroidX Biometric API",
+    dependencies: [{ group: "androidx.biometric", artifact: "biometric", version: "1.2.0-alpha05" }],
+    supportedEvents: [
+      { id: "AuthenticationSucceeded", name: "Auth Succeeded", category: "security" as any, description: "Fingerprint or face match verified", outputs: [], badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+      { id: "AuthenticationFailed", name: "Auth Failed", category: "security" as any, description: "Biometric rejected", outputs: [], badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
+      { id: "AuthenticationError", name: "Auth Error", category: "lifecycle", description: "Hardware error or user canceled", outputs: [{ name: "errorMessage", type: "String", description: "Error text" }], badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/40" },
+    ],
+    supportedProperties: [
+      { name: "title", label: "Dialog Title", type: "string", defaultValue: "Authenticate with Biometrics", description: "Prompt title" },
+      { name: "subtitle", label: "Subtitle", type: "string", defaultValue: "Confirm your fingerprint or face", description: "Prompt subtitle" },
+    ],
+    supportedFunctions: [
+      { id: "Authenticate", name: "Authenticate", description: "Launches Android biometric system prompt", params: [] },
+    ],
+    recommendedActions: ["navigate", "toast", "setVariable"],
+  },
+
+  // 38. ProgressBar
+  ProgressBar: {
+    componentType: "ProgressBar",
+    label: "Progress Bar",
+    category: "Basic UI",
+    iconName: "Loader",
+    description: "Material 3 circular or linear progress indicator",
+    supportedEvents: [],
+    supportedProperties: [
+      { name: "progress", label: "Progress Value (0-100)", type: "number", defaultValue: 50, description: "Current percentage progress" },
+      { name: "indeterminate", label: "Indeterminate (Spinning)", type: "boolean", defaultValue: false, description: "Continuous loading spinner mode" },
+      { name: "isCircular", label: "Circular Shape", type: "boolean", defaultValue: false, description: "True for spinner, false for horizontal bar" },
+      ...COMMON_UI_PROPERTIES,
+    ],
+    supportedFunctions: [
+      { id: "SetProgress", name: "Set Progress", description: "Sets progress level", params: [{ name: "value", type: "Int" }] },
+    ],
+    recommendedActions: ["setProperty", "setVariable"],
+  },
+
+  // 39. Toolbar
+  Toolbar: {
+    componentType: "Toolbar",
+    label: "Top App Bar (Toolbar)",
+    category: "Navigation UI",
+    iconName: "PanelTop",
+    description: "Material 3 center-aligned or standard TopAppBar header",
+    supportedEvents: [
+      { id: "NavigationClick", name: "On Back/Menu Click", category: "gesture", description: "Fires when left navigation icon is clicked", outputs: [], badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/40" },
+    ],
+    supportedProperties: [
+      { name: "title", label: "Title", type: "string", defaultValue: "My Application", description: "Title text" },
+      { name: "showBackButton", label: "Show Back Arrow", type: "boolean", defaultValue: true, description: "Include back navigation icon" },
+      { name: "backgroundColor", label: "Background Color", type: "color", defaultValue: "#0F172A", description: "Toolbar surface tint" },
+      { name: "textColor", label: "Title Color", type: "color", defaultValue: "#FFFFFF", description: "Title text color" },
+      ...COMMON_UI_PROPERTIES,
+    ],
+    supportedFunctions: [
+      { id: "SetTitle", name: "Set Title", description: "Updates toolbar title", params: [{ name: "newTitle", type: "String" }] },
+    ],
+    recommendedActions: ["popBack", "navigate", "toast"],
+  },
 };
 
 
@@ -1779,6 +2118,33 @@ export function getComponentLogicMeta(componentType: string): ComponentLogicMeta
     horizontalarrangement: "Row",
     verticalarrangement: "Column",
     verticalscrollarrangement: "ScrollView",
+    admob: "AdMobBanner",
+    adbannerview: "AdMobBanner",
+    adbanner: "AdMobBanner",
+    admobinterstitial: "AdMobInterstitial",
+    admobrewarded: "AdMobRewarded",
+    admobrewardedvideo: "AdMobRewarded",
+    rewardedadcontainer: "AdMobRewarded",
+    accelerometer: "Accelerometer",
+    accelerometersensor: "Accelerometer",
+    gyroscope: "Gyroscope",
+    gyroscopesensor: "Gyroscope",
+    camera: "Camera",
+    camerasensor: "Camera",
+    barcodescanner: "BarcodeScanner",
+    ocrtextrecognition: "BarcodeScanner",
+    biometric: "BiometricAuth",
+    biometricauth: "BiometricAuth",
+    fingerprint: "BiometricAuth",
+    sqlite: "SQLite",
+    sqlitedatabase: "SQLite",
+    room: "SQLite",
+    roomdatabase: "SQLite",
+    topappbar: "Toolbar",
+    toolbar: "Toolbar",
+    progressbar: "ProgressBar",
+    circularprogress: "ProgressBar",
+    linearprogress: "ProgressBar",
   };
 
   if (ALIAS_MAP[normInput] && COMPONENT_LOGIC_META_MAP[ALIAS_MAP[normInput]]) {

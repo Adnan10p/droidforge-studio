@@ -86,7 +86,7 @@ export const InsertableEdge: React.FC<EdgeProps> = ({
       <BaseEdge
         path={edgePath}
         markerEnd={markerEnd}
-        style={edgeStyle}
+        style={edgeStyle as React.CSSProperties}
         className={isBroken ? "broken-flow-edge" : undefined}
       />
 
@@ -95,7 +95,7 @@ export const InsertableEdge: React.FC<EdgeProps> = ({
         <path
           d={edgePath}
           fill="none"
-          stroke={data?.pulseColor || strokeColor}
+          stroke={String(data?.pulseColor || strokeColor)}
           strokeWidth={(style as any)?.strokeWidth ? Number((style as any).strokeWidth) + 1 : 3.5}
           strokeDasharray={animationType === "flowing-pulse" ? "12 12" : "4 8"}
           strokeLinecap="round"

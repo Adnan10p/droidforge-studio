@@ -11,7 +11,7 @@ function startBackendServer() {
     const serverPath = path.join(__dirname, '../dist/server.cjs');
     try {
       serverProcess = spawn(process.execPath, [serverPath], {
-        env: { ...process.env, PORT: '3000', NODE_ENV: 'production' },
+        env: { ...process.env, PORT: '3000', NODE_ENV: 'production', ELECTRON_RUN_AS_NODE: '1' },
         stdio: 'ignore',
       });
     } catch (err) {

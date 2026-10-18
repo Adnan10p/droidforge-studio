@@ -111,6 +111,46 @@ export const CompanionLiveRunner: React.FC = () => {
               showToast("Copied to clipboard!");
             }
             break;
+          case "dialog":
+            window.alert(`${act.dialogTitle || "Notice"}\n\n${act.dialogBody || act.message || "Operation completed."}`);
+            break;
+          case "snackbar":
+            showToast(act.message || "Notification");
+            break;
+          case "vibrate":
+            if (typeof navigator !== "undefined" && navigator.vibrate) {
+              navigator.vibrate(150);
+            }
+            break;
+          case "playAudio":
+            try {
+              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const osc = audioCtx.createOscillator();
+              osc.type = "sine";
+              osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+              osc.connect(audioCtx.destination);
+              osc.start();
+              osc.stop(audioCtx.currentTime + 0.15);
+            } catch (e) {}
+            break;
+          case "callApi":
+            if (act.endpoint) {
+              showToast(`Calling ${act.method || "GET"} ${act.endpoint.slice(0, 30)}...`);
+              fetch(act.endpoint, { method: act.method || "GET" })
+                .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+                .then((data) => {
+                  const summary = typeof data === "string" ? data : JSON.stringify(data);
+                  showToast(`API: ${summary.slice(0, 45)}...`);
+                  if (act.targetId) {
+                    setComponentPropOverrides((prev) => ({
+                      ...prev,
+                      [act.targetId!]: { ...(prev[act.targetId!] || {}), text: summary.slice(0, 80) },
+                    }));
+                  }
+                })
+                .catch((err) => showToast(`API Error: ${err.message}`));
+            }
+            break;
           default:
             showToast(`Action: ${act.actionType}`);
             break;
@@ -646,7 +686,7 @@ export const CompanionLiveRunner: React.FC = () => {
       {/* Dynamic Screen Content - 100% Edge-to-Edge */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {currentScreen.rootComponent.children && currentScreen.rootComponent.children.length > 0 ? (
-          currentScreen.rootComponent.children.map(renderComponent)
+          currentScreen.rootComponent.children.map((c) => renderComponent(c))
         ) : (
           <div className="h-56 flex flex-col items-center justify-center text-slate-400 text-xs font-medium italic space-y-2">
             <Smartphone className="w-8 h-8 text-slate-500" />

@@ -12,16 +12,18 @@ export interface EdgeInsertOption {
 
 export interface EdgeInsertPickerModalProps {
   isOpen: boolean;
-  x: number;
-  y: number;
+  x?: number;
+  y?: number;
+  position?: { x: number; y: number };
   onClose: () => void;
   onSelectOption: (option: EdgeInsertOption) => void;
 }
 
 export const EdgeInsertPickerModal: React.FC<EdgeInsertPickerModalProps> = ({
   isOpen,
-  x,
-  y,
+  x = 0,
+  y = 0,
+  position,
   onClose,
   onSelectOption,
 }) => {

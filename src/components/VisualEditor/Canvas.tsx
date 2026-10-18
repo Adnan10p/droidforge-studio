@@ -204,7 +204,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   const [screenMenuOpen, setScreenMenuOpen] = useState(false);
 
   const activeTheme = theme || DEFAULT_M3_THEME;
-  const [previewThemeMode, setPreviewThemeMode] = useState<"light" | "dark">(activeTheme.mode || "light");
+  const [previewThemeMode, setPreviewThemeMode] = useState<"light" | "dark">(activeTheme.mode === "dark" ? "dark" : "light");
   const colors = previewThemeMode === "light" ? activeTheme.lightColors : activeTheme.darkColors;
   const shapes = activeTheme.shapes;
   const typo = activeTheme.typography;
