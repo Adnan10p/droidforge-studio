@@ -119,6 +119,19 @@ For step-by-step details in Roman Urdu & English, read [FRIEND_TESTING_GUIDE.md]
 
 ---
 
+
+---
+
+## 📋 Changelog & What's New in v1.1.0
+
+We regularly optimize and enhance DroidForge Studio. Check out [CHANGELOG.md](CHANGELOG.md) for the full comparison of fixes and features.
+
+- **✅ 0 TypeScript Errors**: Clean compilation (`npm run lint` passes with 0 errors).
+- **✅ Desktop App Runtime Fixed**: Electron packaged `.exe` properly runs background Express server using `ELECTRON_RUN_AS_NODE: '1'`.
+- **✅ Assets Bundled**: Included all companion APKs and icons in desktop builds (`electron-builder.json`).
+- **✅ Optimized Bundle Splitting**: Implemented chunking in Vite for faster startup times.
+- **✅ Host Portability**: Removed hardcoded paths; dynamically detects Android SDK on any machine.
+
 ## 🤝 Open Contributions & Pull Requests (PRs)
 
 We welcome developers and team members to help improve DroidForge Studio!
